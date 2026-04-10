@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operating Guide v3.0 — Compact Decision Tree (50 Frameworks)</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242836;
+    --border: #2e3344;
+    --text: #e2e4ea;
+    --text-dim: #8b8fa3;
+    --accent: #6c8cff;
+    --accent-dim: #3d5299;
+    --green: #4ecca3;
+    --green-dim: #2a7a5e;
+    --amber: #f0b429;
+    --amber-dim: #8a6a1a;
+    --red: #ef6b6b;
+    --red-dim: #8a3a3a;
+    --purple: #b388ff;
+    --purple-dim: #5c3d99;
+    --cyan: #56d4e0;
+    --cyan-dim: #2d7a82;
+    --orange: #ff8c42;
+    --orange-dim: #8a4a1a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tree {
+    position: relative;
+    padding-left: 0;
+  }
+
+  /* Node styles */
+  .node {
+    position: relative;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .node-box {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: all 0.15s ease;
+    position: relative;
+  }
+  .node-box:hover {
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+  .node-box.expanded {
+    border-color: var(--accent);
+  }
+  .node-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .node-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .tag-entry { background: var(--accent-dim); color: var(--accent); }
+  .tag-gate { background: var(--amber-dim); color: var(--amber); }
+  .tag-execute { background: var(--green-dim); color: var(--green); }
+  .tag-hiddens { background: var(--red-dim); color: var(--red); }
+  .tag-quality { background: var(--purple-dim); color: var(--purple); }
+  .tag-output { background: var(--cyan-dim); color: var(--cyan); }
+  .tag-loop { background: #3d4a2e; color: #a3d977; }
+  .tag-index { background: var(--orange-dim); color: var(--orange); }
+
+  .node-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex: 1;
+  }
+  .node-ref {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    font-family: 'Consolas', 'Monaco', monospace;
+  }
+  .node-detail {
+    display: none;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .node-detail.show { display: block; }
+  .node-detail strong { color: var(--text); font-weight: 600; }
+  .node-detail code {
+    background: var(--surface2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  /* Depth indicator */
+  .depth-bar {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .depth-seg {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid;
+  }
+  .depth-rapid { border-color: var(--amber-dim); color: var(--amber); background: transparent; }
+  .depth-invest { border-color: var(--accent-dim); color: var(--accent); background: transparent; }
+  .depth-both { border-color: var(--green-dim); color: var(--green); background: transparent; }
+
+  /* Children container */
+  .children {
+    padding-left: 28px;
+    border-left: 2px solid var(--border);
+    margin-left: 16px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+
+  /* Branch labels */
+  .branch-label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-style: italic;
+    padding: 4px 0 2px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .branch-label::before {
+    content: '';
+    width: 12px;
+    height: 1px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  /* Arrow connectors */
+  .arrow-down {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    padding: 2px 0;
+    margin-left: 16px;
+  }
+
+  /* Feedback loop indicator */
+  .feedback {
+    margin: 6px 0 6px 28px;
+    padding: 6px 12px;
+    border: 1px dashed var(--amber-dim);
+    border-radius: 6px;
+    font-size: 0.72rem;
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .feedback::before {
+    content: '\21BB';
+    font-size: 1rem;
+  }
+
+  /* Invariant strip */
+  .invariant-strip {
+    margin: 16px 0;
+    padding: 10px 14px;
+    background: linear-gradient(90deg, var(--red-dim) 0%, transparent 100%);
+    border-left: 3px solid var(--red);
+    border-radius: 0 8px 8px 0;
+    font-size: 0.78rem;
+    color: var(--red);
+  }
+  .invariant-strip strong { color: #ff9e9e; }
+
+  /* Section divider */
+  .phase-divider {
+    margin: 16px 0 8px 0;
+    padding: 4px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Expand icon */
+  .expand-icon {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+  }
+  .expand-icon.open { transform: rotate(90deg); }
+
+  /* Framework index table */
+  .fw-index {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+    margin-top: 8px;
+  }
+  .fw-index th {
+    text-align: left;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .fw-index td {
+    padding: 3px 8px;
+    border-bottom: 1px solid rgba(46,51,68,0.5);
+    color: var(--text-dim);
+  }
+  .fw-index tr:hover td { color: var(--text); background: rgba(108,140,255,0.05); }
+  .fw-new { color: var(--orange) !important; font-weight: 600; }
+  .group-header td {
+    padding-top: 8px;
+    font-weight: 700;
+    color: var(--text) !important;
+    font-size: 0.78rem;
+    border-bottom: 1px solid var(--accent-dim);
+  }
+
+  /* Count badge */
+  .count-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .badge-g1 { background: #2a3d5e; color: var(--accent); }
+  .badge-g2 { background: #2a5e3d; color: var(--green); }
+  .badge-g3 { background: #5e2a3d; color: var(--red); }
+  .badge-g4 { background: #5e4a2a; color: var(--amber); }
+  .badge-g5 { background: #3d2a5e; color: var(--purple); }
+  .badge-g6 { background: #2a5e5e; color: var(--cyan); }
+
+  /* Print */
+  @media print {
+    body { background: white; color: #111; padding: 12px; }
+    .node-box { border-color: #ccc; background: #f8f8f8; }
+    .node-detail { display: block !important; color: #444; }
+    .children { border-left-color: #ccc; }
+    .fw-new { color: #c55a00 !important; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Analytical Series Operating Guide v3.0 — Compact Decision Tree</h1>
+<p class="subtitle">50 frameworks across 6 groups. How sections inter-relate across depths and speeds during any investigation. Click any node to expand. <span style="color:var(--orange)">Orange</span> = 14 new frameworks added in v3.0.</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Entry / Setup</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Decision Gate</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Execute</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Hiddens (invariant)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Quality / Governance</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div> Output / Close</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a3d977"></div> Feedback Loop</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div> Framework Index</div>
+  <div class="legend-item" style="margin-left:auto;"><span style="font-size:0.72rem;color:var(--text-dim)">Depth key:</span>
+    <span class="depth-seg depth-rapid">Rapid</span>
+    <span class="depth-seg depth-invest">Investigative</span>
+    <span class="depth-seg depth-both">Both</span>
+  </div>
+</div>
+
+<div class="invariant-strip">
+  <strong>§7 Hiddens Integration Discipline</strong> runs as an invariant layer across every phase below. §7.1 Tier 1 scan fires early and repeats pre-closure. §7.2 Tier 2 Micro-Protocol profiles every candidate hidden (mechanism, reducibility, detectability, agency, consequence). §7.3 Escalation to Tier 3 can trigger at any gate. §7.4 Closure discipline governs every exit. §7.5 Targeted Scans are optional spears invoked when Tier 1 symptoms point to a specific mechanism.
+</div>
+
+<!-- ═══════════════════════ FRAMEWORK INDEX ═══════════════════════ -->
+<div class="phase-divider">Framework Index — 50 Frameworks across G1–G6</div>
+
+<div class="node" onclick="toggle(this)">
+  <div class="node-box" style="border: 1px solid var(--orange-dim);">
+    <div class="node-header">
+      <span class="node-tag tag-index">Index</span>
+      <span class="node-title">§3.2 Complete framework-to-group mapping — 50 frameworks</span>
+      <span class="node-ref">§3.2</span>
+      <span class="expand-icon">&#9654;</span>
+    </div>
+    <div class="node-detail">
+      <strong>G1 Framing</strong> <span class="count-badge badge-g1">7</span> &nbsp;
+      <strong>G2 Mechanism</strong> <span class="count-badge badge-g2">10</span> &nbsp;
+      <strong>G3 Agency</strong> <span class="count-badge badge-g3">10</span> &nbsp;
+      <strong>G4 Meaning</strong> <span class="count-badge badge-g4">8</span> &nbsp;
+      <strong>G5 Epistemics</strong> <span class="count-badge badge-g5">8</span> &nbsp;
+      <strong>G6 Action &amp; Control</strong> <span class="count-badge badge-g6">7</span>
+      <br><br>
+      <table class="fw-index">
+        <thead><tr><th>Framework</th><th>Primary</th><th>Secondary</th><th>Stage</th></tr></thead>
+        <tbody>
+          <!-- G1 Framing -->
+          <tr class="group-header"><td colspan="4">G1 — Framing (7)</td></tr>
+          <tr><td>Situations Context Classification</td><td>G1</td><td>G5</td><td>Upstream</td></tr>
+          <tr><td>Boundaries</td><td>G1</td><td>G2</td><td>Upstream</td></tr>
+          <tr><td>Dimensions</td><td>G1</td><td>G5</td><td>Upstream</td></tr>
+          <tr><td>Realities</td><td>G1</td><td>G4</td><td>Upstream</td></tr>
+          <tr><td>Scale</td><td>G1</td><td>G2</td><td>Upstream</td></tr>
+          <tr><td>Time</td><td>G1</td><td>G2</td><td>Upstream</td></tr>
+          <tr><td class="fw-new">Space and Place &#9670;</td><td class="fw-new">G1</td><td class="fw-new">G2</td><td class="fw-new">Upstream</td></tr>
+
+          <!-- G2 Mechanism -->
+          <tr class="group-header"><td colspan="4">G2 — Mechanism (10)</td></tr>
+          <tr><td>Systems</td><td>G2</td><td>G5</td><td>Middle</td></tr>
+          <tr><td>Relations</td><td>G2</td><td>G3</td><td>Middle</td></tr>
+          <tr><td>Processes</td><td>G2</td><td>G6</td><td>Middle</td></tr>
+          <tr><td>Causation</td><td>G2</td><td>G5</td><td>Middle</td></tr>
+          <tr><td>Resources</td><td>G2</td><td>G6</td><td>Middle</td></tr>
+          <tr><td class="fw-new">Emergence &#9670;</td><td class="fw-new">G2</td><td class="fw-new">G5</td><td class="fw-new">Middle</td></tr>
+          <tr><td class="fw-new">Networks &#9670;</td><td class="fw-new">G2</td><td class="fw-new">G3</td><td class="fw-new">Middle</td></tr>
+          <tr><td class="fw-new">Institutions &#9670;</td><td class="fw-new">G2</td><td class="fw-new">G4</td><td class="fw-new">Middle</td></tr>
+          <tr><td class="fw-new">Technology &#9670;</td><td class="fw-new">G2</td><td class="fw-new">G6</td><td class="fw-new">Middle</td></tr>
+          <tr><td class="fw-new">Coordination &#9670;</td><td class="fw-new">G2</td><td class="fw-new">G3</td><td class="fw-new">Middle</td></tr>
+
+          <!-- G3 Agency -->
+          <tr class="group-header"><td colspan="4">G3 — Agency (10)</td></tr>
+          <tr><td>Agents</td><td>G3</td><td>G2</td><td>Middle</td></tr>
+          <tr><td>Personas</td><td>G3</td><td>G4</td><td>Middle</td></tr>
+          <tr><td>Incentives</td><td>G3</td><td>G6</td><td>Middle</td></tr>
+          <tr><td>Power</td><td>G3</td><td>G4</td><td>Middle</td></tr>
+          <tr><td>Responsibility</td><td>G3</td><td>G6</td><td>Middle</td></tr>
+          <tr><td>Competencies</td><td>G3</td><td>G2</td><td>Middle</td></tr>
+          <tr><td class="fw-new">Interests &#9670;</td><td class="fw-new">G3</td><td class="fw-new">G6</td><td class="fw-new">Middle</td></tr>
+          <tr><td class="fw-new">Emotions &#9670;</td><td class="fw-new">G3</td><td class="fw-new">G4</td><td class="fw-new">Middle</td></tr>
+          <tr><td class="fw-new">Conflict &#9670;</td><td class="fw-new">G3</td><td class="fw-new">G2</td><td class="fw-new">Middle</td></tr>
+          <tr><td class="fw-new">Cognition &#9670;</td><td class="fw-new">G3</td><td class="fw-new">G5</td><td class="fw-new">Middle</td></tr>
+
+          <!-- G4 Meaning -->
+          <tr class="group-header"><td colspan="4">G4 — Meaning (8)</td></tr>
+          <tr><td>Culture and Norms</td><td>G4</td><td>G3</td><td>Middle</td></tr>
+          <tr><td>Perspectives</td><td>G4</td><td>G5</td><td>Middle</td></tr>
+          <tr><td>Narratives</td><td>G4</td><td>G6</td><td>Middle</td></tr>
+          <tr><td>Communications</td><td>G4</td><td>G5</td><td>Middle</td></tr>
+          <tr><td>Legitimacy</td><td>G4</td><td>G6</td><td>Middle</td></tr>
+          <tr><td>Values</td><td>G4</td><td>G6</td><td>Middle</td></tr>
+          <tr><td class="fw-new">Ethics &#9670;</td><td class="fw-new">G4</td><td class="fw-new">G3</td><td class="fw-new">Middle</td></tr>
+          <tr><td class="fw-new">Trust &#9670;</td><td class="fw-new">G4</td><td class="fw-new">G3</td><td class="fw-new">Middle</td></tr>
+
+          <!-- G5 Epistemics -->
+          <tr class="group-header"><td colspan="4">G5 — Epistemics (8)</td></tr>
+          <tr><td>Beliefs</td><td>G5</td><td>G4</td><td>Middle</td></tr>
+          <tr><td>Evidence</td><td>G5</td><td>—</td><td>Cross-cutting</td></tr>
+          <tr><td>Uncertainties</td><td>G5</td><td>—</td><td>Cross-cutting</td></tr>
+          <tr><td>Failures</td><td>G5</td><td>G2</td><td>Cross-cutting</td></tr>
+          <tr><td>Hiddens</td><td>G5</td><td>—</td><td>Cross-cutting</td></tr>
+          <tr><td>Diagnosis</td><td>G5</td><td>G2</td><td>Middle</td></tr>
+          <tr><td>Metrics</td><td>G5</td><td>G6</td><td>Cross-cutting</td></tr>
+          <tr><td>Knowledge</td><td>G5</td><td>G4</td><td>Cross-cutting</td></tr>
+
+          <!-- G6 Action & Control -->
+          <tr class="group-header"><td colspan="4">G6 — Action &amp; Control (7)</td></tr>
+          <tr><td>Decisions</td><td>G6</td><td>G5</td><td>Downstream</td></tr>
+          <tr><td>Interventions</td><td>G6</td><td>G2</td><td>Downstream</td></tr>
+          <tr><td>Governance</td><td>G6</td><td>G3</td><td>Downstream</td></tr>
+          <tr><td>Risk</td><td>G6</td><td>G5</td><td>Downstream</td></tr>
+          <tr><td>Learning and Adaptation</td><td>G6</td><td>G5</td><td>Downstream</td></tr>
+          <tr><td class="fw-new">Implementation &#9670;</td><td class="fw-new">G6</td><td class="fw-new">G2</td><td class="fw-new">Downstream</td></tr>
+          <tr><td class="fw-new">Scenarios &#9670;</td><td class="fw-new">G6</td><td class="fw-new">G5</td><td class="fw-new">Downstream</td></tr>
+        </tbody>
+      </table>
+      <br>
+      <strong>&#9670; = new in v3.0.</strong> Secondary group assignments indicate the strongest analytical bridge; frameworks may be relevant across multiple groups. Stage indicates typical sequencing: Upstream frameworks set context, Middle frameworks model and explain, Downstream frameworks convert to action, Cross-cutting frameworks operate at every stage.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ GROUP DETAIL ═══════════════════════ -->
+<div class="node" onclick="toggle(this)">
+  <div class="node-box" style="border: 1px solid var(--orange-dim);">
+    <div class="node-header">
+      <span class="node-tag tag-index">Index</span>
+      <span class="node-title">§2.2 Group-to-Hiddens linkage — what each group typically generates</span>
+      <span class="node-ref">§2.2</span>
+      <span class="expand-icon">&#9654;</span>
+    </div>
+    <div class="node-detail">
+      <strong>G1 Framing (7 frameworks):</strong> Wrong boundary, wrong unit of analysis, wrong time horizon, misclassification of situation type, spatial blindness. Symptoms: "solving the wrong problem"; surprises at edges; location-dependent effects missed.<br><br>
+      <strong>G2 Mechanism (10 frameworks):</strong> Hidden interactions, tight coupling, feedback delays, uncontrolled dependencies, emergent behaviour, network topology effects, institutional inertia, technological opacity, coordination failures. Symptoms: cascades, unexplained oscillation, fragile equilibria, emergent surprises, infrastructure lock-in.<br><br>
+      <strong>G3 Agency (10 frameworks):</strong> Incentive suppression, power-filtered reporting, responsibility diffusion, strategic concealment, interest divergence, emotional distortion, unresolved conflict, cognitive bias. Symptoms: "everyone knew but nobody acted"; silence; denial; blame games; irrational persistence; escalation spirals.<br><br>
+      <strong>G4 Meaning (8 frameworks):</strong> Narrative closure, legitimacy theatre, norm constraints on speaking, communications bottlenecks, ethical blind spots, trust erosion or misplaced trust. Symptoms: overconfidence; story dominance; ritual compliance; moral disengagement; trust failures.<br><br>
+      <strong>G5 Epistemics (8 frameworks):</strong> Weak evidence, model overreach, untested assumptions, hindsight bias, diagnostic mono-culture, metric gaming, knowledge silos. Symptoms: conflicting accounts; false certainty; repeated investigative failure; metric-goal displacement.<br><br>
+      <strong>G6 Action &amp; Control (7 frameworks):</strong> Control drift, governance gaps, risk appetite mismatch, brittle decisions, learning not institutionalised, implementation gaps, scenario blindness. Symptoms: recurrence; "fix" without effect; slow degradation; plan-reality divergence; unexamined futures.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PHASE 1: ENTRY ═══════════════════════ -->
+<div class="phase-divider">Phase 1 — Entry and Framing</div>
+
+<div class="tree" id="tree">
+
+  <!-- 1. Scenario Arrives -->
+  <div class="node" onclick="toggle(this)">
+    <div class="node-box">
+      <div class="node-header">
+        <span class="node-tag tag-entry">Entry</span>
+        <span class="node-title">Scenario arrives — establish case container</span>
+        <span class="node-ref">§1 §2</span>
+        <span class="expand-icon">&#9654;</span>
+      </div>
+      <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+      <div class="node-detail">
+        <strong>§1.1</strong> Core premise: visibility failures are the target, not just "what happened."<br>
+        <strong>§1.2</strong> Check preconditions: case question defined? Owner named? Timebox agreed? Access audited?<br>
+        <strong>§1.3</strong> Scope and non-goals: explicit residual unknowns, not complete knowledge.<br>
+        <strong>§2.1–2.2</strong> Group system (G1–G6) provides the coverage model. Group-to-Hiddens linkage identifies what each group typically generates. 50 frameworks across 6 groups; 14 new frameworks expand mechanism, agency, meaning, and action coverage.<br>
+        <strong>Introduction</strong> Series overview: 50 frameworks across G1–G6; visibility failures as the organising concept; Operating Guide as the orchestration layer for routing, sequencing, depth, quality controls, and closure.<br>
+        <strong>§10</strong> Operating Principles are mandatory constraints throughout.<br>
+        <strong>Appendix D §D.7</strong> If LLM-assisted: paste system instruction block; set F/I/A/U tagging active. Load Tier 2 LLM Execution Extracts for routed frameworks.
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">&#9660;</div>
+
+  <!-- 2. Speed Gate -->
+  <div class="node" onclick="toggle(this)">
+    <div class="node-box">
+      <div class="node-header">
+        <span class="node-tag tag-gate">Gate</span>
+        <span class="node-title">Speed gate — select run mode</span>
+        <span class="node-ref">§D.6 §4.1</span>
+        <span class="expand-icon">&#9654;</span>
+      </div>
+      <div class="node-detail">
+        <strong>Decision:</strong> What are the time constraints and decision stakes?<br><br>
+        <strong>§D.6.1 Mode definitions:</strong><br>
+        &bull; <strong>Rapid Run Mode</strong> (60–180 min): stabilise understanding, prioritise next steps. Uses §5.1 protocol. Light coverage with targeted depth.<br>
+        &bull; <strong>Investigative Run Mode</strong> (days–weeks): full explanation, accountability, recurrence prevention. Uses §5.2 or §5.3 protocol. Broad coverage with selective depth.<br><br>
+        <strong>§D.6.7</strong> Both modes exist because decisions have different urgency/stakes profiles. Rapid is not "worse" — it is fit-for-purpose under time pressure.<br>
+        <strong>§D.6.4</strong> No-Early-Exclusion Rule: even in Rapid, no group is excluded from at least a light scan. With 50 frameworks, the light scan across all 6 groups is broader — each group now has 7–10 frameworks providing more analytical surface area.
+      </div>
+    </div>
+  </div>
+
+  <div class="children">
+    <div class="branch-label">Rapid Run Mode (60–180 min)</div>
+    <div class="node" onclick="toggle(this)">
+      <div class="node-box">
+        <div class="node-header">
+          <span class="node-tag tag-execute">Protocol</span>
+          <span class="node-title">§5.1 Rapid Protocol — 7-step sequence</span>
+          <span class="node-ref">§5.1</span>
+          <span class="expand-icon">&#9654;</span>
+        </div>
+        <div class="depth-bar"><span class="depth-seg depth-rapid">Rapid</span></div>
+        <div class="node-detail">
+          <strong>Step 1:</strong> Case question + timebox &#8594; <code>G1</code><br>
+          <strong>Step 2:</strong> Tier 1 Hiddens scan (assume hiddens exist) &#8594; <code>§7.1</code> <code>G5</code><br>
+          <strong>Step 3:</strong> Boundaries, time horizon, scale, <span style="color:var(--orange)">spatial context</span> &#8594; <code>G1</code><br>
+          <strong>Step 4:</strong> System structure + dependencies, <span style="color:var(--orange)">network topology, emergent properties</span> &#8594; <code>G2</code><br>
+          <strong>Step 5:</strong> Evidence quality + key gaps &#8594; <code>G5</code><br>
+          <strong>Step 6:</strong> Immediate risks + stabilisation &#8594; <code>G6</code><br>
+          <strong>Step 7:</strong> Decide depth + plan &#8594; <code>G6</code><br><br>
+          <strong>Gate at Step 7:</strong> Commit to Rapid closure, or escalate to Investigative Run Mode.<br>
+          <strong>Artefacts:</strong> §6 minimum schemas apply (slimmed). F/I/A/U tagging required on all claims (§D.3).
+        </div>
+      </div>
+    </div>
+
+    <div class="branch-label">Investigative Run Mode — post-failure (days–weeks)</div>
+    <div class="node" onclick="toggle(this)">
+      <div class="node-box">
+        <div class="node-header">
+          <span class="node-tag tag-execute">Protocol</span>
+          <span class="node-title">§5.2 Post-Failure Protocol — 11-phase sequence</span>
+          <span class="node-ref">§5.2</span>
+          <span class="expand-icon">&#9654;</span>
+        </div>
+        <div class="depth-bar"><span class="depth-seg depth-invest">Investigative</span></div>
+        <div class="node-detail">
+          <strong>Frame (1–2):</strong> Classify situation, set boundaries, <span style="color:var(--orange)">spatial/place context</span> &#8594; <code>G1</code>; Tier 1 Hiddens scan &#8594; <code>§7.1</code><br>
+          <strong>Model (3–4):</strong> System/relations/process maps, <span style="color:var(--orange)">networks, emergence, technology, institutions, coordination</span> &#8594; <code>G2</code>; causal hypotheses &#8594; <code>G2/G5</code><br>
+          <strong>Agency (5):</strong> Actors, incentives, power, responsibility, <span style="color:var(--orange)">interests, emotions, conflict, cognition</span> &#8594; <code>G3</code><br>
+          <strong>Meaning (6):</strong> Narratives, comms, norms, legitimacy, <span style="color:var(--orange)">ethics, trust</span> &#8594; <code>G4</code><br>
+          <strong>Epistemics (7):</strong> Evidence grading, uncertainties, investigation failure risks &#8594; <code>G5</code><br>
+          <strong>Synthesis (8):</strong> Diagnosis with residual hiddenness &#8594; <code>G5</code> + <code>§7.2 Tier 2</code><br>
+          <strong>Convert (9):</strong> Decisions, interventions, governance, risk, <span style="color:var(--orange)">implementation, scenarios</span> &#8594; <code>G6</code><br>
+          <strong>Assure (10):</strong> Detection/remediation interfaces &#8594; <code>§7.2 Tier 2</code> + <code>G6</code><br>
+          <strong>Learn (11):</strong> Learning loop, drift indicators &#8594; <code>G6</code><br><br>
+          <strong>§7.5 Targeted Scans</strong> can be invoked at any phase where Tier 1 symptoms point to a specific mechanism — most commonly during Model, Agency, Meaning, or Epistemics phases.
+        </div>
+      </div>
+    </div>
+
+    <div class="branch-label">Investigative Run Mode — proactive / pre-change</div>
+    <div class="node" onclick="toggle(this)">
+      <div class="node-box">
+        <div class="node-header">
+          <span class="node-tag tag-execute">Protocol</span>
+          <span class="node-title">§5.3 Proactive Protocol — 6-step sequence</span>
+          <span class="node-ref">§5.3</span>
+          <span class="expand-icon">&#9654;</span>
+        </div>
+        <div class="depth-bar"><span class="depth-seg depth-invest">Investigative</span></div>
+        <div class="node-detail">
+          <strong>Step 1:</strong> Change intent + assumptions, <span style="color:var(--orange)">scenario modelling</span> &#8594; <code>G1/G6</code><br>
+          <strong>Step 2:</strong> Tier 1 Hiddens (change-induced mechanisms) &#8594; <code>§7.1</code> <code>G5</code><br>
+          <strong>Step 3:</strong> Dependency + coupling impacts, <span style="color:var(--orange)">network effects, emergent risks, technology dependencies</span> &#8594; <code>G2</code><br>
+          <strong>Step 4:</strong> Incentives/power + comms integrity, <span style="color:var(--orange)">interest alignment, trust dynamics, ethical constraints</span> &#8594; <code>G3/G4</code><br>
+          <strong>Step 5:</strong> Monitoring, buffers, escalation rules, <span style="color:var(--orange)">implementation planning</span> &#8594; <code>G6</code><br>
+          <strong>Step 6:</strong> Governance + ownership confirmation &#8594; <code>G6</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ PHASE 2: ROUTING ═══════════════════════ -->
+  <div class="phase-divider">Phase 2 — Routing and Depth Selection</div>
+
+  <div class="arrow-down">&#9660;</div>
+
+  <div class="node" onclick="toggle(this)">
+    <div class="node-box">
+      <div class="node-header">
+        <span class="node-tag tag-gate">Gate</span>
+        <span class="node-title">Route — scenario features &#8594; group coverage + depth</span>
+        <span class="node-ref">§4.3 §3.2</span>
+        <span class="expand-icon">&#9654;</span>
+      </div>
+      <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+      <div class="node-detail">
+        <strong>§4.3.1 Decision tree (compact):</strong><br><br>
+        <strong>Branch A — Failure occurred?</strong><br>
+        &bull; YES &#8594; Minimum: G1+G2+G5 DEEP<br>
+        &nbsp;&nbsp;A1: Evidence weak/contested? &#8594; Deepen G5 frameworks (Evidence, Uncertainties, Diagnosis, Failures, Metrics, Knowledge)<br>
+        &nbsp;&nbsp;A2: Coupling/cascade? &#8594; Deepen G2 (Systems, Relations, Processes, <span style="color:var(--orange)">Networks, Emergence, Technology</span> + Risk)<br>
+        &nbsp;&nbsp;A3: Incentives/power/concealment? &#8594; Add G3 DEEP (<span style="color:var(--orange)">now includes Interests, Emotions, Conflict, Cognition</span>)<br>
+        &nbsp;&nbsp;A4: Narratives contested/"too clean"? &#8594; Add G4 DEEP (<span style="color:var(--orange)">now includes Ethics, Trust</span>)<br>
+        &nbsp;&nbsp;A5: Recommendations change controls? &#8594; Add G6 DEEP (<span style="color:var(--orange)">now includes Implementation, Scenarios</span>)<br>
+        &nbsp;&nbsp;A6: Adversarial intent? &#8594; Full G1–G6 DEEP; Tier 3 Hiddens (§7.3)<br>
+        &nbsp;&nbsp;<span style="color:var(--orange)">A7: Institutional/technological mediation? &#8594; Deepen G2 (Institutions, Technology, Coordination)</span><br>
+        &nbsp;&nbsp;<span style="color:var(--orange)">A8: Trust failure or ethical breach? &#8594; Add G4 DEEP (Trust, Ethics, Legitimacy)</span><br><br>
+        <strong>Branch B — No failure, high-stakes decision pending?</strong><br>
+        &bull; YES &#8594; Minimum: G1+G2+G5+G6 DEEP<br>
+        &nbsp;&nbsp;B1: Multi-stakeholder conflict? &#8594; Add G3 DEEP (<span style="color:var(--orange)">Conflict, Interests, Emotions now available</span>)<br>
+        &nbsp;&nbsp;B2: Narrative/legitimacy disputes? &#8594; Add G4 DEEP<br>
+        &nbsp;&nbsp;B3: High novelty/tight time? &#8594; Deepen G2+G5 (<span style="color:var(--orange)">Emergence, Technology particularly relevant</span>)<br>
+        &nbsp;&nbsp;<span style="color:var(--orange)">B4: Implementation risk or scenario uncertainty? &#8594; Deepen G6 (Implementation, Scenarios, Risk)</span><br><br>
+        &bull; NO to both &#8594; Low-stakes/exploratory: G1+G5 light + one domain group deep<br><br>
+        <strong>§4.3.2 Output contract:</strong> Routing statement, minimum group coverage, Full Depth list + rationale, Light Depth list + rationale, escalation triggers.<br>
+        <strong>§3.2</strong> Framework-to-Group mapping tells you which of the 50 frameworks sit in each group. With expanded groups (G2 and G3 now have 10 frameworks each), routing decisions must consider which specific frameworks within a deepened group are highest-signal.<br>
+        <strong>§4.2</strong> Depth selection: run deeply where consequence is high, evidence is weak, incentives may distort, or coupling exists.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ PHASE 3: THE LOOP ═══════════════════════ -->
+  <div class="phase-divider">Phase 3 — Iterative Execution Loop</div>
+
+  <div class="arrow-down">&#9660;</div>
+
+  <div class="node" onclick="toggle(this)">
+    <div class="node-box">
+      <div class="node-header">
+        <span class="node-tag tag-loop">Loop</span>
+        <span class="node-title">§5.0 Iterative investigation loop — the master cycle</span>
+        <span class="node-ref">§5.0</span>
+        <span class="expand-icon">&#9654;</span>
+      </div>
+      <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+      <div class="node-detail">
+        All three protocols (§5.1, §5.2, §5.3) execute within this single repeatable loop. The loop enforces register-first execution, repeated Hiddens scanning, evidence-gated confidence, and explicit residual unknowns.<br><br>
+        <strong>The loop phases are:</strong> Initialise &#8594; Generate &#8594; Route &#8594; Execute &#8594; Test &#8594; Re-scan &#8594; Decide<br>
+        <strong>§5.0.3</strong> Iteration triggers force re-entry: contradictory evidence, "too clean" story, high-impact unknown, new artefacts, governance implications, <span style="color:var(--orange)">emergent behaviour detected, trust breakdown, coordination failure</span>.<br>
+        <strong>§5.0.4</strong> Stop conditions: timebox requires output AND evidence supports claims AND residual unknowns are explicit AND detection interfaces exist.
+      </div>
+    </div>
+  </div>
+
+  <div class="children">
+
+    <!-- Execute: Deep frameworks -->
+    <div class="node" onclick="toggle(this)">
+      <div class="node-box">
+        <div class="node-header">
+          <span class="node-tag tag-execute">Execute</span>
+          <span class="node-title">Run Full Depth frameworks — extract, populate, discover</span>
+          <span class="node-ref">§5.0.2 step 4</span>
+          <span class="expand-icon">&#9654;</span>
+        </div>
+        <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+        <div class="node-detail">
+          For each framework on the Full Depth list:<br>
+          a) Extract facts from scenario + artefacts; tag <code>F/I/A/U</code> (§D.3.2)<br>
+          b) Populate framework core tables (Types / Dynamics / Interfaces)<br>
+          c) Add/adjust candidate hiddens (mechanism + impact + detectability)<br>
+          d) Add tests/probes; update Evidence Ledger<br><br>
+          <strong>Tier 2 LLM Execution Extracts:</strong> For LLM-assisted execution, load the compact extract (~5,000–8,000 tokens) for each Full Depth framework rather than the full document (~25,000 tokens). Extracts contain routing triggers, core tables, interface specifications, and near-neighbour disambiguation.<br><br>
+          <strong>§6</strong> Standard Artefacts: Hiddens Register, Evidence Register, Hypothesis/Test Backlog, Group Coverage Matrix<br>
+          <strong>§D.3</strong> Prompt Discipline Rules PD-01 to PD-10 govern all outputs
+        </div>
+      </div>
+    </div>
+
+    <!-- Execute: Light frameworks -->
+    <div class="node" onclick="toggle(this)">
+      <div class="node-box">
+        <div class="node-header">
+          <span class="node-tag tag-execute">Execute</span>
+          <span class="node-title">Run Light Depth frameworks — scan for high-signal candidates</span>
+          <span class="node-ref">§5.0.2 step 5</span>
+          <span class="expand-icon">&#9654;</span>
+        </div>
+        <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+        <div class="node-detail">
+          For each framework on the Light Depth list:<br>
+          a) Run scan prompts; record only high-signal candidates and missing-information triggers<br>
+          b) A Light framework may escalate to Full Depth if evidence is contested, consequence is high, or coupling is discovered<br><br>
+          <strong>§D.6.4 No-Early-Exclusion Rule:</strong> Every group gets at least a light scan, even in Rapid Run Mode. Exclusion is a depth decision, not a coverage decision. With 50 frameworks, light scanning covers more analytical territory per group — particularly G2 (10 frameworks) and G3 (10 frameworks).
+        </div>
+      </div>
+    </div>
+
+    <!-- Hiddens layer within execution -->
+    <div class="node" onclick="toggle(this)">
+      <div class="node-box" style="border-left: 3px solid var(--red);">
+        <div class="node-header">
+          <span class="node-tag tag-hiddens">Hiddens</span>
+          <span class="node-title">§7.1–7.5 Hiddens discipline fires within execution</span>
+          <span class="node-ref">§7</span>
+          <span class="expand-icon">&#9654;</span>
+        </div>
+        <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+        <div class="node-detail">
+          <strong>§7.1 Tier 1 Six-Category Scan:</strong> Required early (step 2 of loop) and repeated pre-closure (step 7). Sweeps all 6 meta-categories (I Perceptual &#8594; VI Ontological). Assume hiddens exist.<br><br>
+          <strong>§7.2 Tier 2 (Crosswalk Shortlist) Micro-Protocol:</strong> Structured deepening of top Hiddens candidates. For each shortlisted hidden — rate mechanism, reducibility, detectability, agency, consequence. Assign detection + remediation interfaces. Map interaction chains.<br><br>
+          <strong>§7.3 Escalation to Tier 3:</strong> Triggers: high consequence, adversarial concealment, persistent disagreement, repeat failure, cascade suspicion. Tier 3 = full 30-type run + detection/remediation matrix.<br><br>
+          <strong>§7.5 Targeted Scans (13 scans, 4 families):</strong> When Tier 1 symptoms point to a specific hiding mechanism, use the Triage Matrix (§7.5.3) to select one or more scans. Each scan routes through 3–5 frameworks in sequence. <span style="color:var(--orange)">v3.0 extends scan framework pools — new frameworks are available as secondary routing options where their analytical lens applies.</span><br><br>
+          <strong>Family A</strong> Social/organisational:<br>
+          &bull; Scan 1 (Suppression): Power &#8594; Incentives &#8594; Culture &amp; Norms &#8594; Communications &#8594; Hiddens <span style="color:var(--orange)">[+Interests, Conflict]</span><br>
+          &bull; Scan 5 (Legitimacy Theatre): Legitimacy &#8594; Governance &#8594; Culture &amp; Norms &#8594; Responsibility &#8594; Hiddens <span style="color:var(--orange)">[+Institutions, Ethics, Trust]</span><br>
+          &bull; Scan 8 (Narrative Capture): Narratives &#8594; Perspectives &#8594; Evidence &#8594; Culture &amp; Norms &#8594; Hiddens <span style="color:var(--orange)">[+Trust, Emotions, Cognition]</span><br>
+          &bull; Scan 11 (Belief Persistence): Beliefs &#8594; Values &#8594; Evidence &#8594; Diagnosis &#8594; Hiddens <span style="color:var(--orange)">[+Cognition, Emotions, Ethics]</span><br><br>
+          <strong>Family B</strong> Structural/systemic:<br>
+          &bull; Scan 3 (Positional Blindness): Perspectives &#8594; Boundaries &#8594; Scale &#8594; Dimensions &#8594; Hiddens <span style="color:var(--orange)">[+Space and Place, Cognition]</span><br>
+          &bull; Scan 6 (Cascade Discovery): Systems &#8594; Relations &#8594; Causation &#8594; Boundaries &#8594; Hiddens <span style="color:var(--orange)">[+Networks, Emergence, Technology]</span><br>
+          &bull; Scan 9 (Uncertainty Masking): Uncertainties &#8594; Evidence &#8594; Metrics &#8594; Decisions &#8594; Hiddens <span style="color:var(--orange)">[+Scenarios, Cognition]</span><br>
+          &bull; Scan 12 (Competency Blindspot): Competencies &#8594; Agents &#8594; Resources &#8594; Processes &#8594; Hiddens <span style="color:var(--orange)">[+Coordination, Technology]</span><br><br>
+          <strong>Family C</strong> Temporal:<br>
+          &bull; Scan 2 (Drift): Time &#8594; Processes &#8594; Governance &#8594; Failures &#8594; Hiddens <span style="color:var(--orange)">[+Institutions, Implementation]</span><br>
+          &bull; Scan 7 (Amnesia): Learning &amp; Adaptation &#8594; Knowledge &#8594; Failures &#8594; Governance &#8594; Hiddens <span style="color:var(--orange)">[+Institutions, Cognition]</span><br><br>
+          <strong>Family D</strong> Action-induced:<br>
+          &bull; Scan 4 (Evidence Corruption): Evidence &#8594; Incentives &#8594; Communications &#8594; Narratives &#8594; Hiddens <span style="color:var(--orange)">[+Trust, Ethics]</span><br>
+          &bull; Scan 10 (Negligence): Responsibility &#8594; Failures &#8594; Hiddens &#8594; Causation <span style="color:var(--orange)">[+Interests, Conflict, Ethics]</span><br>
+          &bull; Scan 13 (Intervention Blindspot): Interventions &#8594; Risk &#8594; Diagnosis &#8594; Systems &#8594; Hiddens <span style="color:var(--orange)">[+Implementation, Scenarios, Emergence]</span><br><br>
+          <strong>§7.5.8 LLM Execution Adapter:</strong> Pseudocode, gate questions (52 total for original scans; extended gates pending for v3.0 framework additions), per-step minimum output table (11 fields), depth triggers (8 conditions for Light &#8594; Full escalation).
+        </div>
+      </div>
+    </div>
+
+    <!-- Test -->
+    <div class="node" onclick="toggle(this)">
+      <div class="node-box">
+        <div class="node-header">
+          <span class="node-tag tag-execute">Test</span>
+          <span class="node-title">Convert unknowns into probes/tests — request artefacts</span>
+          <span class="node-ref">§5.0.2 step 6</span>
+          <span class="expand-icon">&#9654;</span>
+        </div>
+        <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+        <div class="node-detail">
+          Execute tests/probes where possible, or produce an Evidence Request List.<br>
+          <strong>§D.3.4</strong> Handling missing information: every <code>U</code> must generate an information request or probe/test. Do not invent facts (PD-01).<br>
+          <strong>§D.3.1 PD-05:</strong> Prefer tests over stories — test hypotheses rather than narrating around gaps.
+        </div>
+      </div>
+    </div>
+
+    <!-- Re-scan -->
+    <div class="node" onclick="toggle(this)">
+      <div class="node-box" style="border-left: 3px solid var(--red);">
+        <div class="node-header">
+          <span class="node-tag tag-hiddens">Re-scan</span>
+          <span class="node-title">Pre-closure Tier 1 re-scan — identify omissions-by-lens</span>
+          <span class="node-ref">§5.0.2 step 7 §7.1</span>
+          <span class="expand-icon">&#9654;</span>
+        </div>
+        <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+        <div class="node-detail">
+          Re-run Tier 1 Hiddens scan with updated knowledge. Purpose: catch hiding mechanisms that only become visible after other frameworks have run.<br>
+          If re-scan reveals new hiddenness classes &#8594; update routing statement and loop back to Execute phase.<br>
+          <strong>§7.5.5 Scan Interaction Map:</strong> If a targeted scan was run, check whether its findings trigger a second targeted scan (21 documented interactions, <span style="color:var(--orange)">additional interactions from new framework cross-links pending v3.0 finalisation</span>).
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback loop -->
+    <div class="feedback">
+      §5.0.3 Iteration triggers: contradictory evidence · "too clean" story · high-impact Unknown · new artefacts · governance implications · <span style="color:var(--orange)">emergent behaviour · trust breakdown · coordination failure</span> &#8594; loop back to Execute or Route
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════ PHASE 4: QUALITY ═══════════════════════ -->
+  <div class="phase-divider">Phase 4 — Quality Controls</div>
+
+  <div class="arrow-down">&#9660;</div>
+
+  <div class="node" onclick="toggle(this)">
+    <div class="node-box">
+      <div class="node-header">
+        <span class="node-tag tag-quality">Quality</span>
+        <span class="node-title">§8 Quality controls + anti-theatre rule</span>
+        <span class="node-ref">§8 §10</span>
+        <span class="expand-icon">&#9654;</span>
+      </div>
+      <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+      <div class="node-detail">
+        <strong>§8.1 Checklist:</strong> Alternative explanations maintained? Evidence graded? Incentive/power audit done? Narrative audit done? Boundary regression tested? Drift detection applied? Escalation discipline followed? <span style="color:var(--orange)">Trust dynamics assessed? Ethical dimensions considered? Institutional constraints checked?</span><br><br>
+        <strong>§8.2 Anti-theatre rule:</strong> Every major claim must be backed by: at least one evidence entry (or explicit gap), an uncertainty statement, a hiddenness check, and an owner for follow-up.<br><br>
+        <strong>§10 Operating Principles:</strong> Mandatory constraints that govern all work — visibility-first, proportionality, explicit residual unknowns, no premature closure.<br><br>
+        <strong>§D.3.1 PD-08:</strong> Do not close prematurely. PD-09: Make residual hiddenness explicit. PD-10: Canonical source rule.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ PHASE 5: CLOSURE ═══════════════════════ -->
+  <div class="phase-divider">Phase 5 — Closure or Escalation</div>
+
+  <div class="arrow-down">&#9660;</div>
+
+  <div class="node" onclick="toggle(this)">
+    <div class="node-box">
+      <div class="node-header">
+        <span class="node-tag tag-gate">Gate</span>
+        <span class="node-title">Closure gate — are stop conditions met?</span>
+        <span class="node-ref">§5.0.4 §7.4</span>
+        <span class="expand-icon">&#9654;</span>
+      </div>
+      <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+      <div class="node-detail">
+        <strong>§5.0.4 Stop conditions (ALL must hold):</strong><br>
+        1. Decision timebox requires an output<br>
+        2. Evidence Ledger supports key claims at required confidence<br>
+        3. Residual Unknowns are explicit, prioritised, and assigned owners/actions<br>
+        4. Remediation plan includes detection interfaces for top residual hiddens<br><br>
+        <strong>If NOT met:</strong> Output must be non-closure with explicit close-out requirements, or escalate to Tier 3 / full G1–G6.
+      </div>
+    </div>
+  </div>
+
+  <div class="children">
+    <div class="branch-label">Stop conditions MET &#8594; Bounded closure</div>
+    <div class="node" onclick="toggle(this)">
+      <div class="node-box">
+        <div class="node-header">
+          <span class="node-tag tag-output">Output</span>
+          <span class="node-title">Produce closure artefacts</span>
+          <span class="node-ref">§6 §7.4 §D.4</span>
+          <span class="expand-icon">&#9654;</span>
+        </div>
+        <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+        <div class="node-detail">
+          <strong>§7.4 Closure discipline:</strong> Residual unknowns list, acceptability rationale, monitoring plan, ownership, learning hook.<br><br>
+          <strong>§6 Standard Artefacts:</strong> Hiddens Register (final), Evidence Register, Group Coverage Matrix, Hypothesis/Test Backlog, Decision Record.<br>
+          <strong>§D.4 Output contract:</strong> Required registers and checklists per run mode. Rapid produces slimmer artefacts; Investigative produces full set including <span style="color:var(--orange)">implementation assessment and scenario stress-test where G6 was deepened</span>.<br><br>
+          <strong>§9 Governance:</strong> Outputs feed into series governance — change control, learning loop, case repository.
+        </div>
+      </div>
+    </div>
+
+    <div class="branch-label">Stop conditions NOT met &#8594; Escalate or non-closure</div>
+    <div class="node" onclick="toggle(this)">
+      <div class="node-box">
+        <div class="node-header">
+          <span class="node-tag tag-gate">Escalate</span>
+          <span class="node-title">Escalate: expand coverage, deepen, or Tier 3</span>
+          <span class="node-ref">§7.3 §4.3</span>
+          <span class="expand-icon">&#9654;</span>
+        </div>
+        <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+        <div class="node-detail">
+          <strong>Options:</strong><br>
+          &bull; Add groups (e.g., A3 triggers &#8594; add G3 DEEP)<br>
+          &bull; Upgrade Light &#8594; Full Depth on specific frameworks<br>
+          &bull; Escalate Hiddens to Tier 3 (full 30-type run)<br>
+          &bull; Escalate Rapid &#8594; Investigative Run Mode<br>
+          &bull; Invoke §7.5 Targeted Scans if a specific mechanism is now suspected<br>
+          &bull; <span style="color:var(--orange)">Activate new-framework lenses within an already-deepened group (e.g., add Networks and Emergence within G2 DEEP)</span><br><br>
+          <strong>&#8594; Loop back to Phase 2 (re-route) or Phase 3 (re-execute)</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ APPENDIX D ═══════════════════════ -->
+  <div class="phase-divider">Cross-cutting — LLM Execution Governance (Appendix D)</div>
+
+  <div class="node" onclick="toggle(this)">
+    <div class="node-box" style="border: 1px dashed var(--accent-dim);">
+      <div class="node-header">
+        <span class="node-tag tag-entry">LLM</span>
+        <span class="node-title">Appendix D — active throughout when LLM-assisted</span>
+        <span class="node-ref">§D.1–D.12</span>
+        <span class="expand-icon">&#9654;</span>
+      </div>
+      <div class="node-detail">
+        <strong>§D.2</strong> Applies to all LLM-assisted uses (Rapid, Investigative, post-failure, adversarial).<br><br>
+        <strong>§D.3 Prompt Discipline Rules (PD-01 to PD-10):</strong><br>
+        PD-01: Don't invent facts &middot; PD-02: Tag F/I/A/U &middot; PD-03: Separate observation from interpretation<br>
+        PD-04: Evidence provenance &middot; PD-05: Prefer tests over stories &middot; PD-06: Preserve disagreement<br>
+        PD-07: Default to hiddenness &middot; PD-08: No premature closure &middot; PD-09: Residual hiddenness explicit &middot; PD-10: Canonical source rule<br><br>
+        <strong>§D.5</strong> Routing logic (canonical): minimum group coverage + deep/light selection rules<br>
+        <strong>§D.6</strong> Run mode definitions, operational sequences, tiered Hiddens depth control<br>
+        <strong>§D.8</strong> Prompt pack: paste-ready prompts for each mode<br>
+        <strong>§D.9</strong> Orchestrator Prompts: mode selection gate &#8594; Rapid or Investigative orchestrator<br>
+        <strong>§D.11</strong> LLM-Navigable Compact Decision Tree: 8 nodes, invariant layer, traversal summary, section-to-node mapping, depth&times;speed matrix<br>
+        <strong>§D.12</strong> Architectural Notes and Design Rationale: why the Operating Guide cannot be a single decision tree; LLM-executability assessment<br>
+        <strong>§7.5.8</strong> LLM Execution Adapter for Targeted Scans: pseudocode, 52 gate questions, output tables, depth triggers<br><br>
+        <strong>3-Tier Document Architecture (v3.0):</strong><br>
+        &bull; <strong>Tier 1</strong> Full Framework Documents (~25,000 tokens each): 50 comprehensive human-readable references<br>
+        &bull; <strong>Tier 2</strong> LLM Execution Extracts (~5,000–8,000 tokens each): 50 compact operational interfaces loaded at runtime<br>
+        &bull; <strong>Tier 3</strong> Operating Guides: Full OG (~62,000 tokens) for humans + LLM-Only OG (~15,000–18,000 tokens) for machine execution<br>
+        Load Tier 2 extracts for routed frameworks rather than Tier 1 documents to manage context window budget.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ GOVERNANCE ═══════════════════════ -->
+  <div class="phase-divider">Post-investigation — Governance and Learning</div>
+
+  <div class="node" onclick="toggle(this)">
+    <div class="node-box">
+      <div class="node-header">
+        <span class="node-tag tag-quality">Govern</span>
+        <span class="node-title">§9 Governance — repeatability, evolution, learning</span>
+        <span class="node-ref">§9 §11 §12</span>
+        <span class="expand-icon">&#9654;</span>
+      </div>
+      <div class="depth-bar"><span class="depth-seg depth-both">Both</span></div>
+      <div class="node-detail">
+        <strong>§9.1</strong> Roles: series steward, framework maintainer, reviewer, practitioner community.<br>
+        <strong>§9.2</strong> Change control: non-substantive &#8594; substantive &#8594; taxonomy extension &#8594; group label refinement.<br>
+        <strong>§9.3</strong> Canonical source rule: Operating Guide is authoritative for prompt discipline and output contracts. Framework excerpts point to it.<br>
+        <strong>§11</strong> Glossary: shared terminology across all sections.<br>
+        <strong>§12</strong> Document control: version history tracks all changes. v3.0 expansion from 36 to 50 frameworks with 3-tier architecture.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════ DOCUMENT CONTROL ═══════════════════════ -->
+<div style="margin-top: 24px; padding: 12px 16px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); font-size: 0.75rem; color: var(--text-dim);">
+  <strong style="color:var(--text);">Document control</strong><br>
+  Version: 3.0 &nbsp;|&nbsp; Date: 2026-04-10 &nbsp;|&nbsp; Companion to: Analytical Series Operating Guide v3.0<br>
+  Changes from v2.5: Expanded from 36 to 50 frameworks; added framework index section; updated routing branches (A7, A8, B4); extended targeted scan framework pools; added 3-tier document architecture reference; updated group-to-hiddens linkage for expanded groups; added iteration triggers for emergent behaviour, trust breakdown, coordination failure.<br>
+  Author: Anthropic Claude Opus 4.6
+</div>
+
+<script>
+function toggle(el) {
+  const detail = el.querySelector('.node-detail');
+  const icon = el.querySelector('.expand-icon');
+  if (detail) {
+    detail.classList.toggle('show');
+    if (icon) icon.classList.toggle('open');
+  }
+}
+</script>
+
+</body>
+</html>
