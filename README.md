@@ -17,53 +17,56 @@ Framework files - appear as pairs:
 * one LLM extract companion file 
 
 Grouped by framework name:
-* Causation
-* Cognition
-* Communications
-* Competencies
-* Conflict
-* Coordination
-* Culture and Norms
-* Decisions
-* Diagnosis
-* Dimensions
-* Emergence
-* Emotions
-* Ethics
-* Evidence
-* Failures
-* Governance
-* Hiddens
-* Implementation
-* Incentives
-* Institutions
-* Interests
-* Interventions
-* Knowledge
-* Learning and Adaptation
-* Legitimacy
-* Metrics
-* Narratives
-* Networks
-* Personas
-* Perspectives
-* Power
-* Processes
-* Realities
-* Relations
-* Resources
-* Responsibility
-* Risk
-* Scale
-* Scenarios
-* Situations Context Classification
-* Space and Place
-* Systems
-* Technology
-* Time
-* Trust
-* Uncertainties
-* Values 
+1. Agents
+2. Beliefs
+3. Boundaries
+4. Causation
+5. Cognition
+6. Communications
+7. Competencies
+8. Conflict
+9. Coordination
+10. Culture and Norms
+11. Decisions
+12. Diagnosis
+13. Dimensions
+14. Emergence
+15. Emotions
+16. Ethics
+17. Evidence
+18. Failures
+19. Governance
+20. Hiddens
+21. Implementation
+22. Incentives
+23. Institutions
+24. Interests
+25. Interventions
+26. Knowledge
+27. Learning and Adaptation
+28. Legitimacy
+29. Metrics
+30. Narratives
+31. Networks
+32. Personas
+33. Perspectives
+34. Power
+35. Processes
+36. Realities
+37. Relations
+38. Resources
+39. Responsibility
+40. Risk
+41. Scale
+42. Scenarios
+43. Situations Context Classification
+44. Space and Place
+45. Systems
+46. Technology
+47. Time
+48. Trust
+49. Uncertainties
+50. Values
 
 
 
