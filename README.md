@@ -10,6 +10,7 @@ Master Rewrite Template - for new frameworks & updates
 Decision Tree - LLM readable - markdown
 Decision Tree - human readable - interactive HTML
 Knowledge Graph - human readable - interactive HTML
+ASF weaknesses and gaps analysis
 
 Working Paper — April 2026
 
