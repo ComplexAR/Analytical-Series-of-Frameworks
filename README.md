@@ -12,6 +12,59 @@ The ASF comprises the following:
 * Knowledge Graph - human readable - interactive HTML, 
 * ASF weaknesses and gaps analysis, 
 
+Framework files These mostly appear as pairs:
+* one main framework 
+* one LLM extract companion file 
+Grouped by framework name:
+* Causation
+* Cognition
+* Communications
+* Competencies
+* Conflict
+* Coordination
+* Culture and Norms
+* Decisions
+* Diagnosis
+* Dimensions
+* Emergence
+* Emotions
+* Ethics
+* Evidence
+* Failures
+* Governance
+* Hiddens
+* Implementation
+* Incentives
+* Institutions
+* Interests
+* Interventions
+* Knowledge
+* Learning and Adaptation
+* Legitimacy
+* Metrics
+* Narratives
+* Networks
+* Personas
+* Perspectives
+* Power
+* Processes
+* Realities
+* Relations
+* Resources
+* Responsibility
+* Risk
+* Scale
+* Scenarios
+* Situations Context Classification
+* Space and Place
+* Systems
+* Technology
+* Time
+* Trust
+* Uncertainties
+* Values 
+
+
 Working Paper — April 2026
 
 Abstract: 
