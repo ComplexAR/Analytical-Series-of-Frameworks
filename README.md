@@ -2,15 +2,15 @@ The Analytical Series of Frameworks (ASF): A Structured Methodology for Discover
 
 The ASF comprises the following:
 
-Architectural Design Document, 
-50 Analytical Frameworks - human analyst, 
-50 Analytical Frameworks - LLM analyst, 
-Operating Guide - ochestration by human or LLM, 
-Master Rewrite Template - for new frameworks & updates, 
-Decision Tree - LLM readable - markdown, 
-Decision Tree - human readable - interactive HTML, 
-Knowledge Graph - human readable - interactive HTML, 
-ASF weaknesses and gaps analysis, 
+* Architectural Design Document, 
+* 50 Analytical Frameworks - human analyst, 
+* 50 Analytical Frameworks - LLM analyst, 
+* Operating Guide - ochestration by human or LLM, 
+* Master Rewrite Template - for new frameworks & updates, 
+* Decision Tree - LLM readable - markdown, 
+* Decision Tree - human readable - interactive HTML, 
+* Knowledge Graph - human readable - interactive HTML, 
+* ASF weaknesses and gaps analysis, 
 
 Working Paper — April 2026
 
