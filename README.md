@@ -12,7 +12,7 @@ The ASF comprises the following:
 * Knowledge Graph - human readable - interactive HTML, 
 * ASF weaknesses and gaps analysis, 
 
-Framework files - These mostly appear as pairs:
+Framework files - appear as pairs:
 * one main framework 
 * one LLM extract companion file 
 
