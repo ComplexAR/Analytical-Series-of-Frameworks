@@ -74,14 +74,6 @@ Grouped by framework name:
 49. Uncertainties
 50. Values
 
-
-2026-04-13-asf_full_50_framework_series_html_stacked.md
-
-Page
-1
-/
-1
-100%
 # Analytical Series of Frameworks — Full 50 Framework Series
 
 ## Framework of Agents
